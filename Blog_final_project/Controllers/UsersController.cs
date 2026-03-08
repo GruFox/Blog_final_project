@@ -1,121 +1,133 @@
 ﻿using Blog_final_project.Models;
-using Blog_final_project.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using Blog_final_project.Interfaces;
 
 namespace Blog_final_project.Controllers;
 
+[Authorize]
 public class UsersController : Controller
 {
-    private readonly BlogDbContext _context;
+    private readonly IUserRepository _userRepository;
+    private readonly IRoleRepository _roleRepository;
 
-    public UsersController(BlogDbContext context)
+    public UsersController(IUserRepository userRepository, IRoleRepository roleRepository)
     {
-        _context = context;
+        _userRepository = userRepository;
+        _roleRepository = roleRepository;
     }
 
     // GET: Users
     public async Task<IActionResult> Index()
     {
-        var users = await _context.Users.ToListAsync();
-        return View(users);
+        var users = await _userRepository.ShowUsersAsync();
+
+        if (users == null)
+            return NotFound();
+
+        var model = new UserViewModel()
+        {
+            Users = users
+        };
+
+        return View(model);
     }
 
     // GET: Users/Details/5
-    public async Task<IActionResult> Details(int? id)
+    public async Task<IActionResult> Details(int id)
     {
-        if (id == null) return NotFound();
-
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _userRepository.GetUserByIdAsync(id);
 
         if (user == null) return NotFound();
 
-        return View(user);
-    }
-
-    // GET: Users/Create
-    public IActionResult Create() => View();
-
-    // POST: Users/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("UserName,Email,About,AvatarUrl")] User user)
-    {
-        if (ModelState.IsValid)
+        var model = new DetailsUserViewModel
         {
-            _context.Add(user);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-        return View(user);
+            Id = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            About = user.About,
+            AvatarUrl = user.AvatarUrl,
+            Articles = user.Articles
+            .Select(a => new ArticleItemViewModel
+            {
+                Id = a.Id,
+                Title = a.Title
+            }).ToList()
+        };
+
+        return View(model);
     }
 
     // GET: Users/Edit/5
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Edit(int? id)
+    [Authorize]
+    public async Task<IActionResult> Edit(int id)
     {
-        if (id == null) return NotFound();
-
-        var user = await _context.Users.FindAsync(id);
+        var user = await _userRepository.GetUserByIdAsync(id);
         if (user == null) return NotFound();
 
-        return View(user);
+        var currentUserName = User.Identity!.Name;
+
+        var isAdmin = User.IsInRole("Admin");
+        var isOwner = user.UserName == currentUserName;
+
+        if (!isAdmin && !isOwner)
+            return Forbid();
+
+        string[] fullName = user.UserName.Split([' ']);
+
+        string firstName = fullName[0];
+        string lastName = fullName.Length > 1 ? fullName[1] : string.Empty;
+
+        var allRoles = await _roleRepository.GetAllRolesAsync();
+
+        var model = new EditUserViewModel
+        {
+            Id = user.Id,
+            Roles = allRoles,
+            SelectedRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList(),
+            CanEditRoles = isAdmin,
+            RegistrationValues = new RegisterViewModel
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                EmailReg = user.Email,
+                PasswordReg = user.Password
+            }
+        };
+
+        return View(model);
     }
 
     // POST: Users/Edit/5
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,UserName,Email,About,AvatarUrl")] User user)
+    public async Task<IActionResult> Edit(EditUserViewModel model)
     {
-        if (id != user.Id) return NotFound();
+        var user = await _userRepository.GetUserByIdAsync(model.Id);
+        if (user == null) return NotFound();
 
-        if (ModelState.IsValid)
+        var currentUserName = User.Identity!.Name;
+
+        var isAdmin = User.IsInRole("Admin");
+        var isOwner = user.UserName == currentUserName;
+
+        if (!isAdmin && !isOwner)
+            return Forbid();
+
+        // Обновляем обычные поля
+        user.UserName = model.RegistrationValues.FirstName + " " + model.RegistrationValues.LastName;
+        user.Email = model.RegistrationValues.EmailReg;
+        user.Password = model.RegistrationValues.PasswordReg;
+
+        // Роли меняет только админ
+        if (isAdmin)
         {
-            try
-            {
-                _context.Update(user);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(user.Id)) return NotFound();
-                else throw;
-            }
-            return RedirectToAction(nameof(Index));
+            await _userRepository.UpdateUserRolesAsync(user, model.SelectedRoleIds);
         }
-        return View(user);
+
+        await _userRepository.SaveAsync();
+
+        return RedirectToAction("Details", new { id = user.Id });
     }
-
-    // GET: Users/Delete/5
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null) return NotFound();
-
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-        if (user == null) return NotFound();
-
-        return View(user);
-    }
-
-    // POST: Users/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [Authorize(Roles = "Admin")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
-        var user = await _context.Users.FindAsync(id);
-
-        if (user == null) return NotFound();
-
-        _context.Users.Remove(user!);
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
-    }
-
-    private bool UserExists(int id) => _context.Users.Any(u => u.Id == id);
 }

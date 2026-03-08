@@ -1,0 +1,67 @@
+﻿@model Blog_final_project.Models.TagViewModel
+
+@{
+    ViewData["Title"] = "Tags";
+}
+
+<div class="show-tag">
+    <h3 class="center">Все теги</h3>
+
+    <div class="block-reg background-white">
+        @if (Model.Tags.Count != 0)
+        {
+            @foreach (var tag in Model.Tags)
+            {
+                <div class="show-tag">
+
+                    @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
+                    {
+                        <div class="mrgn center-align">
+                            <a class="details_tag"
+                               asp-area=""
+                               asp-controller="Tags"
+                               asp-action="Edit"
+                               asp-route-id="@tag.Id">
+                                <h4>@tag.Name</h4>
+                            </a>
+                        </div>
+
+                        <div class="mrgn center-align">
+                            Статей по тегу: @tag.Articles.Count
+                        </div>
+                        <br />
+                    }
+                    else
+                    {
+                        <div class="mrgn center-align">
+                            <h4>@tag.Name</h4>
+                        </div>
+
+                        <div class="mrgn center-align">
+                            Статей по тегу: @tag.Articles.Count
+                        </div>
+                        <br />
+                    }
+                    
+                </div>
+            }
+        }
+        else
+        {
+            <div>
+                <label> Поиск не дал результатов.</label>
+            </div>
+        }
+    </div>
+
+    @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
+    {
+        <a class="create_tag"
+           asp-area=""
+           asp-controller="Tags"
+           asp-action="Create">
+            Добавить тег
+        </a>
+    }
+
+</div>

@@ -1,0 +1,92 @@
+﻿@model Blog_final_project.Models.DetailsArticleViewModel
+
+@{
+	ViewData["Title"] = "DetailsArticle";
+}
+
+<div class="show-article">
+    <h3 class="center">@Model.Title</h3>
+
+    <div class="block-show background-white">
+        @if (Model.Tags.Any())
+        {
+            foreach (var tag in Model.Tags)
+            {
+                <div class="show-tag">
+                    <span>@tag</span>
+                </div>
+            }
+        }
+    </div>
+
+    <div>
+        @Model.Text
+    </div>
+
+    <div>
+        Автор: @Model.AuthorName
+    </div>
+
+    <div class="show-comments">
+        <h4 class="center">Комментарии к статье</h4>
+
+        @foreach (var comment in Model.Comments)
+        {
+            <div class="comment-block">
+                <div class="comment-text">
+                    @comment.Text
+                </div>
+
+                <div class="comment-autor">
+                    @comment.AuthorName
+                </div>
+
+                @if (User.IsInRole("Admin") || User.Identity?.Name == comment.AuthorName)
+                {
+                    <div>
+                        <form asp-controller="Comments" asp-action="Edit">
+
+                            <input type="hidden" name="id" value="@comment.Id" />
+
+                            <button class="edit-btn">
+                                Редактировать
+                            </button>
+
+                        </form>
+
+                        <form asp-controller="Comments" asp-action="Delete" method="post">
+
+                            <input type="hidden" name="id" value="@comment.Id" />
+
+                            <button class="delete-btn">
+                                Удалить
+                            </button>
+
+                        </form>
+                    </div>
+                }
+            </div>
+        }
+        <br />
+
+    </div>
+
+    <!-- Отправка комментария -->
+    <form asp-controller="Comments"
+          asp-action="Create"
+          method="post"
+          class="chat-input">
+
+        <input type="hidden" name="ArticleId" value="@Model.ArticleId" />
+
+        <div>
+            <textarea name="CommentText" placeholder="Введите комментарий..."></textarea>
+        </div>
+        
+        <div>
+            <button class="btn-primary-soft" type="submit">
+                Оставить комментарий
+            </button>
+        </div>
+    </form>
+</div>

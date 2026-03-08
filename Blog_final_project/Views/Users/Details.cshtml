@@ -1,0 +1,50 @@
+﻿@model Blog_final_project.Models.DetailsUserViewModel
+
+@{
+	ViewData["Title"] = "DetailsUser";
+}
+
+<div class="profile">
+    
+    <img class="profile-img"
+    src="@(string.IsNullOrEmpty(Model.AvatarUrl)
+    ? "http://pngimg.com/uploads/husky/husky_PNG19.png"
+    : Model.AvatarUrl)"
+    alt="Avatar" />
+
+    <h2>@Model.UserName</h2>
+
+    <div class="mrgn center-align">
+        @foreach (var role in Model.Roles)
+        {
+            <p>@role</p>
+        }
+    </div>
+
+    <p><b>Email:</b> @Model.Email</p>
+    <p><b>О себе:</b> @Model.About</p>
+
+    <p><b>Мои статьи:</b></p>
+
+    @foreach (var article in Model.Articles)
+    {
+        <div>
+            <a asp-controller="Articles"
+               asp-action="Details"
+               asp-route-id="@article.Id">
+                @article.Title
+            </a>
+        </div>
+    }
+
+    @if (User.IsInRole("Admin") || User.Identity?.Name == Model.UserName)
+    {
+        <a asp-controller="Users"
+           asp-action="Edit"
+           asp-route-id="@Model.Id"
+           class="edit_submit">
+            Редактировать
+        </a>
+    }
+    
+</div>

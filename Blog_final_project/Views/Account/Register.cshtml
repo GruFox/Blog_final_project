@@ -1,0 +1,59 @@
+﻿@model Blog_final_project.Models.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.17.0/jquery.validate.min.js"></script>
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.10/jquery.validate.unobtrusive.min.js"></script>
+
+<div class="block-reg background-white">
+    <h3 class="center">Регистрация пользователя</h3>
+
+    <form class="frm" method="post" asp-controller="Account" asp-action="Register">
+        <div asp-validation-summary="ModelOnly"></div>
+        <div>
+            <div class="mrgn">
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName" class="form-control" placeholder="Введите имя" />
+                <span asp-validation-for="FirstName" class="text-danger"></span><br />
+            </div>
+        </div>
+
+        <div>
+            <div class="mrgn">
+                <label asp-for="LastName" class="form-label"></label>
+                <input asp-for="LastName" class="form-control" placeholder="Введите фамилию" />
+                <span asp-validation-for="LastName" class="text-danger"></span><br />
+            </div>
+        </div>
+
+        <div>
+            <div class="mrgn">
+                <label asp-for="EmailReg" class="form-label"></label>
+                <input asp-for="EmailReg" class="form-control" placeholder="Введите email" />
+                <span asp-validation-for="EmailReg" class="text-danger"></span><br />
+            </div>
+        </div>
+
+        <div>
+            <div class="mrgn">
+                <label asp-for="PasswordReg" class="form-label"></label>
+                <input asp-for="PasswordReg" class="form-control" placeholder="Введите пароль" />
+                <span asp-validation-for="PasswordReg" class="text-danger"></span><br />
+            </div>
+        </div>
+
+        <div>
+            <div class="mrgn">
+                <label asp-for="PasswordConfirm" class="form-label"></label>
+                <input asp-for="PasswordConfirm" class="form-control" placeholder="Подтвердите введенный пароль" /><br />
+                <span asp-validation-for="PasswordConfirm" class="text-danger"></span><br />
+            </div>
+        </div>
+
+        <div class="center">
+            <input class="btn_submit" type="submit" value="Зарегистрироваться" />
+        </div>
+    </form>
+</div>

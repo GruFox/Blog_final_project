@@ -1,0 +1,37 @@
+﻿@model Blog_final_project.Models.EditTagViewModel
+
+@{
+	ViewData["Title"] = "EditTag";
+}
+
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.17.0/jquery.validate.min.js"></script>
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.10/jquery.validate.unobtrusive.min.js"></script>
+
+<div class="block-reg background-white">
+    <h3 class="center">Редактирование тега</h3>
+
+    <form class="frm" method="post" asp-controller="Tags" asp-action="Edit">
+        <div asp-validation-summary="ModelOnly"></div>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mrgn">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span><br />
+        </div>
+
+        <div class="center">
+            <input class="btn_submit" type="submit" value="Сохранить" />
+        </div>
+    </form>
+
+    <div>
+        <a class="page_tag"
+           asp-area=""
+           asp-controller="Tags"
+           asp-action="Index">
+           Перейти к списку всех тегов
+       </a>
+    </div>
+
+</div>

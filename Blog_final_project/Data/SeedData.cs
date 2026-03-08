@@ -11,11 +11,22 @@ public class SeedData
         if (!await context.Roles.AnyAsync())
         {
             context.Roles.AddRange(
-                new Role { Name = "Admin" },
-                new Role { Name = "Moderator" },
-                new Role { Name = "User" }
+                new Role
+                {
+                    Name = "Admin",
+                    Description = "Роль с максимальными возможностями в приложении"
+                },
+                new Role
+                {
+                    Name = "Moderator",
+                    Description = "Редактирование и удаление комментариев и статей"
+                },
+                new Role
+                {
+                    Name = "User",
+                    Description = "Стандартная роль приложения"
+                }
             );
-
             await context.SaveChangesAsync();
         }
 

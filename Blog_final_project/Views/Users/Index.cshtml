@@ -1,0 +1,57 @@
+﻿@model Blog_final_project.Models.UserViewModel
+
+@{
+	ViewData["Title"] = "IndexUser";
+}
+
+<div class="show-tag">
+    <h3 class="center">Все пользователи</h3>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <a
+            asp-controller="Account"
+            asp-action="CreateUser">
+            Добавить пользователя
+        </a>
+    }
+
+    <div class="block-show background-white">
+        @if (Model.Users.Count != 0)
+        {
+            @foreach (var user in Model.Users)
+            {
+                <div class="show-user">
+
+                    <div class="mrgn center-align">
+                        <a class="details_user"
+                           asp-area=""
+                           asp-controller="Users"
+                           asp-action="Details"
+                           asp-route-id="@user.Id">
+                            @user.UserName
+                        </a>
+                    </div>
+
+                    <div class="mrgn center-align">
+                        @foreach (var userRole in user.UserRoles)
+                        {
+                            <p>@userRole.Role.Name</p>
+                        }
+                    </div>
+
+                    <div class="mrgn center-align">
+                        @user.Email
+                    </div>
+
+                </div>
+            }
+        }
+        else
+        {
+            <div>
+                <label> Поиск не дал результатов.</label>
+            </div>
+        }
+    </div>
+</div>

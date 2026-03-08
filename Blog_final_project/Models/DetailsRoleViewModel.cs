@@ -1,0 +1,8 @@
+﻿namespace Blog_final_project.Models;
+
+public class DetailsRoleViewModel
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = null!;
+    public string Description { get; set; } = null!;
+}

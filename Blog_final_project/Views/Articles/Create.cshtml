@@ -1,0 +1,56 @@
+﻿@model Blog_final_project.Models.CreateArticleViewModel
+
+@{
+	ViewData["Title"] = "CreateArticle";
+}
+
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.17.0/jquery.validate.min.js"></script>
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.10/jquery.validate.unobtrusive.min.js"></script>
+
+<div class="block-reg background-white">
+    <h3 class="center">Добавление статьи</h3>
+
+    <form class="frm" method="post" asp-controller="Articles" asp-action="Create">
+        <div asp-validation-summary="ModelOnly"></div>
+        <div>
+            <div class="mrgn">
+                @foreach (var tag in @Model.AllTags)
+                {
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="SelectedTagIds"
+                               value="@tag.Id" />
+
+                        <label class="form-check-label">
+                            @tag.Name
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <div class="mrgn">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span><br />
+            </div>
+
+            <div class="mrgn">
+                <label asp-for="Text" class="form-label"></label>
+                <textarea asp-for="Text" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Text" class="text-danger"></span><br />
+            </div>
+        </div>
+
+        <div class="center">
+            <input class="btn_submit" type="submit" value="Добавить" />
+        </div>
+    </form>
+
+    <div>
+        <a class="page_tag"
+           asp-area="" asp-controller="Articles"
+           asp-action="Index">Вернуться к списку всех статей</a>
+    </div>
+
+</div>

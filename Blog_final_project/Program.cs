@@ -1,5 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using Blog_final_project.Data;
+using Blog_final_project.Interfaces;
+using Blog_final_project.Repositoties;
+using Microsoft.EntityFrameworkCore;
 
 namespace Blog_final_project;
 
@@ -19,16 +21,23 @@ public class Program
             .AddCookie("MyCookieAuth", options =>
             {
                 options.LoginPath = "/Account/Login";
+                options.AccessDeniedPath = "/Error/AccessDenied";
             });
 
         builder.Services.AddAuthorization();
+
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+        builder.Services.AddScoped<ITagRepository, TagRepository>();
+        builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+        builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
         {
-            app.UseExceptionHandler("/Home/Error");
+            app.UseExceptionHandler("/Error/ServerError");
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
@@ -40,6 +49,8 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.UseStatusCodePagesWithReExecute("/Error/NotFound");
 
         app.MapControllerRoute(
             name: "default",

@@ -1,204 +1,203 @@
-﻿using Blog_final_project.Data;
+﻿using Blog_final_project.Interfaces;
 using Blog_final_project.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Blog_final_project.Controllers;
 
 public class ArticlesController : Controller
 {
-    public readonly BlogDbContext _context;
+    private readonly IArticleRepository _articleRepository;
+    private readonly ITagRepository _tagRepository;
 
-    public ArticlesController(BlogDbContext context)
+    public ArticlesController(IArticleRepository articleRepository, ITagRepository tagRepository)
     {
-        _context = context;
+        _articleRepository = articleRepository;
+        _tagRepository = tagRepository;
     }
 
     // GET: Articles
-    [Authorize]
     public async Task<IActionResult> Index()
     {
-        var articles = await _context.Articles
-            .Include(a => a.Author)
-            .ToListAsync();
-        return View(articles);
+        var articles = await _articleRepository.ShowArticlesAsync();
+
+        var model = new ArticleViewModel
+        {
+            Articles = articles
+        };
+
+        return View(model);
     }
 
     // GET: Articles/Details/5
-    [Authorize]
-    public async Task<IActionResult> Details(int? id)
+    public async Task<IActionResult> Details(int id)
     {
-        if (id == null) return NotFound();
+        var article = await _articleRepository.GetArticleById(id);
 
-        var article = await _context.Articles
-            .Include(a => a.Author)
-            .Include(a => a.Comments)
-            .Include(a => a.Tags)
-            .FirstOrDefaultAsync(a => a.Id == id);
+        if (article == null)
+            return NotFound();
 
-        if (article == null) return NotFound();
+        var model = new DetailsArticleViewModel
+        {
+            Id = article.Id,
+            ArticleId = article.Id,
+            Title = article.Title,
+            Text = article.Text,
+            AuthorId = article.AuthorId,
+            AuthorName = article.Author.UserName,
 
-        return View(article);
+            Tags = article.Tags
+            .Select(t => t.Name)
+            .ToList(),
+
+            Comments = article.Comments
+            .Select(c => new CommentItemViewModel
+            {
+                Id = c.Id,
+                Text = c.CommentText,
+                AuthorName = c.Commentator.UserName
+            })
+
+            .ToList()
+        };
+
+        return View(model);
     }
 
     // GET: Articles/Create
     [Authorize]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        ViewData["Tags"] = _context.Tags.ToList();
-        return View();
+        var tags = await _tagRepository.ShowTagsAsync();
+
+        var model = new CreateArticleViewModel
+        {
+            AllTags = tags
+        };
+
+        return View(model);
     }
 
     // POST: Articles/Create
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Title,Text")] Article article, int[] selectedTags)
+    public async Task<IActionResult> Create(CreateArticleViewModel model)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            var currentUserId = GetCurrentUserId();
-
-            article.AuthorId = currentUserId;
-
-            // Добавляем теги
-            if (selectedTags != null)
-            {
-                foreach (var tagId in selectedTags)
-                {
-                    var tag = await _context.Tags.FindAsync(tagId);
-                    if (tag != null) article.Tags.Add(tag);
-                }
-            }
-
-            _context.Add(article);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            model.AllTags = await _tagRepository.ShowTagsAsync();
+            return View(model);
         }
 
-        ViewData["Tags"] = _context.Tags.ToList();
-        return View(article);
+        var selectedTags = new List<Tag>();
+
+        if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
+        {
+            selectedTags = await _tagRepository.GetTagsByIdsAsync(model.SelectedTagIds);
+        }
+
+        var userId = GetCurrentUserId();
+
+        var article = new Article
+        {
+            Title = model.Title,
+            Text = model.Text,
+            AuthorId = userId,
+            Tags = selectedTags
+        };
+
+        await _articleRepository.CreateArticleAsync(article);
+
+        return RedirectToAction(nameof(Index));
     }
 
     // GET: Articles/Edit/5
     [Authorize]
-    public async Task<IActionResult> Edit(int? id)
+    public async Task<IActionResult> Edit(int id)
     {
-        if (id == null) return NotFound();
-
-        var article = await _context.Articles
-            .Include(a => a.Tags)
-            .FirstOrDefaultAsync(a => a.Id == id);
+        var article = await _articleRepository.GetArticleById(id);
 
         if (article == null) return NotFound();
 
-        var currentUserId = GetCurrentUserId();
+        var allTags = await _tagRepository.ShowTagsAsync();
 
-        if (article.AuthorId != currentUserId
-            && !User.IsInRole("Admin")
-            && !User.IsInRole("Moderator"))
+        var model = new EditArticleViewModel
         {
-            return Forbid();
-        }
+            Id = article.Id,
+            Title = article.Title,
+            Text = article.Text,
+            SelectedTagIds = article.Tags.Select(t => t.Id).ToList(),
+            AllTags = allTags
+        };
 
-        ViewData["Tags"] = _context.Tags.ToList();
-        return View(article);
+        return View(model);
     }
 
     // POST: Articles/Edit/5
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Text")] Article updatedArticle, int[] selectedTags)
+    public async Task<IActionResult> Edit(EditArticleViewModel model)
     {
-        if (id != updatedArticle.Id)
-            return NotFound();
-
-        var article = await _context.Articles
-            .Include(a => a.Tags)
-            .FirstOrDefaultAsync(a => a.Id == id);
-
-        if (article == null)
-            return NotFound();
-
-        var currentUserId = GetCurrentUserId();
-
-        if (article.AuthorId != currentUserId
-            && !User.IsInRole("Admin")
-            && !User.IsInRole("Moderator"))
-            return Forbid();
-
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            article.Title = updatedArticle.Title;
-            article.Text = updatedArticle.Text;
-
-            article.Tags.Clear();
-            foreach (var tagId in selectedTags)
-            {
-                var tag = await _context.Tags.FindAsync(tagId);
-                if (tag != null) article.Tags.Add(tag);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            model.AllTags = await _tagRepository.ShowTagsAsync();
+            return View(model);
         }
 
-        ViewData["Tags"] = _context.Tags.ToList();
-        return View(article);
-    }
-
-
-    // GET: Articles/Delete/5
-    [Authorize]
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null) return NotFound();
-
-        var article = await _context.Articles
-            .Include(a => a.Author)
-            .FirstOrDefaultAsync(a => a.Id == id);
-
+        var article = await _articleRepository.GetArticleById(model.Id);
         if (article == null) return NotFound();
 
-        var currentUserId = GetCurrentUserId();
+        var selectedTags = new List<Tag>();
 
-        if (article.AuthorId != currentUserId && !User.IsInRole("Admin"))
+        if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
         {
-            return Forbid();
+            selectedTags = await _tagRepository.GetTagsByIdsAsync(model.SelectedTagIds);
         }
 
-        return View(article);
+        article.Title = model.Title;
+        article.Text = model.Text;
+        article.Tags = selectedTags;
+
+        await _articleRepository.SaveAsync();
+
+        return RedirectToAction(nameof(Index));
     }
 
     // POST: Articles/Delete/5
     [Authorize]
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var article = await _context.Articles.FindAsync(id);
-        if (article != null)
+        var article = await _articleRepository.GetArticleById(id);
+
+        if (article == null)
         {
-            var currentUserId = GetCurrentUserId();
-
-            if (article.AuthorId != currentUserId && !User.IsInRole("Admin"))
-            {
-                return Forbid();
-            }
-
-            _context.Articles.Remove(article);
-            await _context.SaveChangesAsync();
+            return NotFound();
         }
+        
+        var currentUserId = GetCurrentUserId();
+        
+        if (article.AuthorId != currentUserId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+        
+        await _articleRepository.DeleteAsync(article);
 
         return RedirectToAction(nameof(Index));
     }
 
     private int GetCurrentUserId()
     {
-        return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (claim == null)
+            throw new Exception("User id claim not found");
+
+        return int.Parse(claim.Value);
     }
 }

@@ -1,175 +1,130 @@
 ﻿using System.Security.Claims;
-using Blog_final_project.Data;
+using Blog_final_project.Interfaces;
 using Blog_final_project.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace Blog_final_project.Controllers;
 
 [Authorize]
 public class CommentsController : Controller
 {
-    private readonly BlogDbContext _context;
+    private readonly ICommentRepository _commentRepository;
 
-    public CommentsController(BlogDbContext context)
+    public CommentsController(ICommentRepository commentRepository)
     {
-        _context = context;
+        _commentRepository = commentRepository;
     }
 
-    // GET: Comments
     public async Task<IActionResult> Index()
     {
-        var comments = _context.Comments
-            .Include(c => c.Article)
-            .Include(c => c.Commentator);
+        var comments = await _commentRepository.GetAllCommentsAsync();
 
-        return View(await comments.ToListAsync());
-    }
-
-    // GET: Comments/Details/5
-    public async Task<IActionResult> Details(int? id)
-    {
-        if (id == null) return NotFound();
-
-        var comment = await _context.Comments
-            .Include(c => c.Article)
-            .Include(c => c.Commentator)
-            .FirstOrDefaultAsync(m => m.Id == id);
-
-        if (comment == null) return NotFound();
-
-        return View(comment);
-    }
-
-    // GET: Comments/Create
-    public IActionResult Create()
-    {
-        ViewData["ArticleId"] = new SelectList(_context.Articles, "Id", "Title");
-        ViewData["CommentatorId"] = new SelectList(_context.Users, "Id", "UserName");
-        return View();
-    }
-
-    // POST: Comments/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("CommentText,ArticleId")] Comment comment)
-    {
-        if (ModelState.IsValid)
+        var model = new CommentViewModel
         {
-            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            Comments = comments
+        };
 
-            comment.CommentatorId = currentUserId;
-            comment.CreatedAt = DateTime.UtcNow;
-
-            _context.Add(comment);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        ViewData["ArticleId"] = new SelectList(_context.Articles, "Id", "Title", comment.ArticleId);
-        return View(comment);
+        return View(model);
     }
 
-    // GET: Comments/Edit/5
-    public async Task<IActionResult> Edit(int? id)
+    public async Task<IActionResult> Details(int id)
     {
-        if (id == null)
-            return NotFound();
-
-        var comment = await _context.Comments
-            .Include(c => c.Article)
-            .Include(c => c.Commentator)
-            .FirstOrDefaultAsync(c => c.Id == id);
+        var comment = await _commentRepository.GetCommentByIdAsync(id);
 
         if (comment == null)
             return NotFound();
 
-        var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        if (comment.CommentatorId != currentUserId
-            && !User.IsInRole("Admin"))
-        {
-            return Forbid();
-        }
-
         return View(comment);
     }
 
-    // POST: Comments/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,CommentText")] Comment updatedComment)
+    public async Task<IActionResult> Create(CreateCommentViewModel model)
     {
-        if (id != updatedComment.Id)
-            return NotFound();
+        if (!ModelState.IsValid)
+            return RedirectToAction("Details", "Articles", new { id = model.ArticleId });
 
-        var comment = await _context.Comments.FindAsync(id);
+        var comment = new Comment
+        {
+            CommentText = model.CommentText,
+            ArticleId = model.ArticleId,
+            CommentatorId = GetCurrentUserId(),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _commentRepository.AddCommentAsync(comment);
+
+        return RedirectToAction("Details", "Articles", new { id = model.ArticleId });
+    }
+
+    public async Task<IActionResult> Edit(int id)
+    {
+        var comment = await _commentRepository.GetCommentByIdAsync(id);
 
         if (comment == null)
             return NotFound();
 
-        var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        if (comment.CommentatorId != currentUserId
-            && !User.IsInRole("Admin"))
-        {
+        if (comment.CommentatorId != GetCurrentUserId() && !User.IsInRole("Admin"))
             return Forbid();
-        }
 
-        if (ModelState.IsValid)
+        var model = new EditCommentViewModel
         {
-            comment.CommentText = updatedComment.CommentText;
+            Id = comment.Id,
+            CommentText = comment.CommentText
+        };
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        return View(comment);
+        return View(model);
     }
 
-    // GET: Comments/Delete/5
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null) return NotFound();
-
-        var comment = await _context.Comments
-            .Include(c => c.Article)
-            .Include(c => c.Commentator)
-            .FirstOrDefaultAsync(m => m.Id == id);
-
-        if (comment == null) return NotFound();
-
-        var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        if (comment.CommentatorId != currentUserId && !User.IsInRole("Admin"))
-        {
-            return Forbid();
-        }
-
-        return View(comment);
-    }
-
-    // POST: Comments/Delete/5
-    [HttpPost, ActionName("Delete")]
+    [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
+    public async Task<IActionResult> Edit(EditCommentViewModel model)
     {
-        var comment = await _context.Comments.FindAsync(id);
-        if (comment != null)
-        {
-            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+        if (!ModelState.IsValid)
+            return View(model);
 
-            if (comment.CommentatorId != currentUserId && !User.IsInRole("Admin"))
-            {
-                return Forbid();
-            }
+        var comment = await _commentRepository.GetCommentByIdAsync(model.Id);
 
-            _context.Comments.Remove(comment);
-            await _context.SaveChangesAsync();
-        }
+        if (comment == null)
+            return NotFound();
 
-        return RedirectToAction(nameof(Index));
+        if (comment.CommentatorId != GetCurrentUserId() && !User.IsInRole("Admin"))
+            return Forbid();
+
+        comment.CommentText = model.CommentText;
+
+        await _commentRepository.UpdateCommentAsync(comment);
+
+        return RedirectToAction("Details", "Articles", new { id = comment.ArticleId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var comment = await _commentRepository.GetCommentByIdAsync(id);
+
+        if (comment == null)
+            return NotFound();
+
+        if (comment.CommentatorId != GetCurrentUserId() && !User.IsInRole("Admin"))
+            return Forbid();
+
+        var articleId = comment.ArticleId;
+
+        await _commentRepository.DeleteCommentAsync(comment);
+
+        return RedirectToAction("Details", "Articles", new { id = articleId });
+    }
+
+    private int GetCurrentUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (claim == null)
+            throw new Exception("User id claim not found");
+
+        return int.Parse(claim.Value);
     }
 }

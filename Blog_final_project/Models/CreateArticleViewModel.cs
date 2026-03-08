@@ -1,0 +1,20 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Blog_final_project.Models;
+
+public class CreateArticleViewModel
+{
+    [Required(ErrorMessage = "Введите название статьи")]
+    [Display(Name = "Заголовок")]
+    public string Title { get; set; } = null!;
+
+    [Required(ErrorMessage = "Введите текст")]
+    [Display(Name = "Контент")]
+    public string Text { get; set; } = null!;
+
+    // Все доступные теги (для отображения)
+    public List<Tag> AllTags { get; set; } = new();
+
+    // Выбранные теги (ID)
+    public List<int> SelectedTagIds { get; set; } = new();
+}

@@ -1,0 +1,62 @@
+﻿@model Blog_final_project.Models.RoleViewModel
+
+@{
+	ViewData["Title"] = "IndexRole";
+}
+
+<div class="roles-container">
+    <h3>Все роли</h3>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <a class="add-role"
+           asp-area=""
+           asp-controller="Roles"
+           asp-action="Create">
+            Добавить роль
+        </a>
+    }
+    
+
+    @if (Model.Roles.Any())
+    {
+        @foreach (var role in @Model.Roles)
+        {
+            <div class="role-card">
+
+                <div class="role-title">
+                    <a class="details_user"
+                       asp-area=""
+                       asp-controller="Roles"
+                       asp-action="Details"
+                       asp-route-id="@role.Id">
+                       @role.Name
+                    </a>
+                </div>
+
+                <div>
+                    <p class="role-description">@role.Description</p>
+                </div>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="mrgn center-align">
+                        <a class="btn btn-secondary"
+                           asp-controller="Roles"
+                           asp-action="Edit"
+                           asp-route-id="@role.Id">
+                            Редактировать
+                        </a>
+                    </div>
+                }
+
+            </div>
+        }
+    }
+    else
+    {
+        <div>
+            <label> Поиск не дал результатов.</label>
+        </div>
+    }
+</div>

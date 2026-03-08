@@ -5,10 +5,7 @@ namespace Blog_final_project.Data;
 
 public class BlogDbContext : DbContext
 {
-    public BlogDbContext(DbContextOptions<BlogDbContext> options) : base(options)
-    {
-        
-    }
+    public BlogDbContext(DbContextOptions<BlogDbContext> options) : base(options) { }
     public DbSet<User> Users { get; set; }
     public DbSet<Article> Articles { get; set; }
     public DbSet<Comment> Comments { get; set; }
@@ -32,5 +29,11 @@ public class BlogDbContext : DbContext
             .HasOne(ur => ur.Role)
             .WithMany(r => r.UserRoles)
             .HasForeignKey(ur => ur.RoleId);
+
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.Article)
+            .WithMany(a => a.Comments)
+            .HasForeignKey(c => c.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

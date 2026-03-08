@@ -1,0 +1,82 @@
+﻿@model Blog_final_project.Models.EditUserViewModel
+
+@{
+    ViewData["Title"] = "EditUser";
+}
+
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.17.0/jquery.validate.min.js"></script>
+<script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.10/jquery.validate.unobtrusive.min.js"></script>
+
+<div class="block-reg background-white">
+    <h3 class="center">Редактирование пользователя</h3>
+
+    <form class="frm" method="post" asp-controller="Users" asp-action="Edit">
+        <div asp-validation-summary="ModelOnly"></div>
+        <input type="hidden" asp-for="Id" />
+        <div>
+            @if (Model.CanEditRoles)
+            {
+                <div class="mrgn">
+                    @foreach (var role in Model.Roles)
+                    {
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="SelectedRoleIds"
+                                   value="@role.Id"
+                                   @(Model.SelectedRoleIds.Contains(role.Id) ? "checked" : "") />
+
+                            <label class="form-check-label">
+                                @role.Name
+                            </label>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="mrgn">
+                <label asp-for="RegistrationValues.FirstName" class="form-label"></label>
+                <input asp-for="RegistrationValues.FirstName" class="form-control" />
+                <span asp-validation-for="RegistrationValues.FirstName" class="text-danger"></span><br />
+            </div>
+
+            <div class="mrgn">
+                <label asp-for="RegistrationValues.LastName" class="form-label"></label>
+                <input asp-for="RegistrationValues.LastName" class="form-control" />
+                <span asp-validation-for="RegistrationValues.LastName" class="text-danger"></span><br />
+            </div>
+
+            <div class="mrgn">
+                <label asp-for="RegistrationValues.EmailReg" class="form-label"></label>
+                <input asp-for="RegistrationValues.EmailReg" class="form-control" />
+                <span asp-validation-for="RegistrationValues.EmailReg" class="text-danger"></span><br />
+            </div>
+
+            <div class="mrgn">
+                <label asp-for="RegistrationValues.PasswordReg" class="form-label"></label>
+                <input asp-for="RegistrationValues.PasswordReg" class="form-control" />
+                <span asp-validation-for="RegistrationValues.PasswordReg" class="text-danger"></span><br />
+            </div>
+
+            <div class="mrgn">
+                <label asp-for="RegistrationValues.PasswordConfirm" class="form-label"></label>
+                <input asp-for="RegistrationValues.PasswordConfirm" class="form-control" placeholder="Подтвердите введенный пароль" /><br />
+                <span asp-validation-for="RegistrationValues.PasswordConfirm" class="text-danger"></span><br />
+            </div>
+        </div>
+
+        <div class="center">
+            <input class="btn_submit" type="submit" value="Сохранить" />
+        </div>
+    </form>
+
+    <div>
+        <a class="page_user"
+           asp-area=""
+           asp-controller="Users"
+           asp-action="Index">
+           Выйти без сохранения
+       </a>
+    </div>
+
+</div>

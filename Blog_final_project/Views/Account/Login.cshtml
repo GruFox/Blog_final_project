@@ -1,0 +1,33 @@
+﻿@model Blog_final_project.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="block-reg background-white">
+    <h3 class="center">Вход в приложение</h3>
+
+    <form class="frm" method="post" asp-controller="Account" asp-action="Login">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="mrgn">
+			<label asp-for="Login" class="form-label"></label>
+			<input asp-for="Login" class="form-control" placeholder="Введите логин" />
+            <span asp-validation-for="Login" class="text-danger"></span><br />
+        </div>
+
+        <div class="mrgn">
+			<label asp-for="Password" class="form-label"></label>
+			<input asp-for="Password" class="form-control" placeholder="Введите пароль" /><br />
+            <span asp-validation-for="Password" class="text-danger"></span><br />
+        </div>
+
+        <input class="enter_submit" type="submit" value="Войти" />
+    </form>
+    
+    <div>
+        <span>Ещё нет аккаунта? </span>
+        <a class="create_article" asp-area="" asp-controller="Account" asp-action="Register">Зарегистрируйтесь</a>
+    </div>
+
+</div>
