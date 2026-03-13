@@ -22,14 +22,19 @@
 
         @if (User.IsInRole("Admin") || User.Identity?.Name == comment.Commentator.UserName)
         {
-            <form asp-action="Edit" asp-route-id="@comment.Id">
-                @Html.AntiForgeryToken()
-                <button type="submit">Редактировать</button>
-            </form>
+            <a
+                asp-action="Edit"
+                asp-route-id="@comment.Id"
+                class="btn btn-primary">
+                Редактировать
+            </a>
 
             <form asp-action="Delete" asp-route-id="@comment.Id" method="post">
                 @Html.AntiForgeryToken()
-                <button type="submit">Удалить</button>
+                <button type="submit"
+                        onclick="return confirm('Удалить комментарий?');">
+                    Удалить
+                </button>
             </form>
         }
 

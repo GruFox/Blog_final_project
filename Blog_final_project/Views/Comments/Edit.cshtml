@@ -7,8 +7,8 @@
 <form asp-action="Edit" method="post">
 
     <input type="hidden" asp-for="Id" />
-
     <textarea asp-for="CommentText"></textarea>
+    <span asp-validation-for="CommentText"></span>
 
     <button type="submit">Сохранить</button>
 

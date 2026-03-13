@@ -5,6 +5,11 @@ namespace Blog_final_project.Data;
 
 public class SeedData
 {
+    /// <summary>
+    /// Создает роли и пользователей по умолчанию
+    /// </summary>
+    /// <param name="context">Параметр соединения с БД</param>
+    /// <returns></returns>
     public static async Task InitializeAsync(BlogDbContext context)
     {
         // Создание роли

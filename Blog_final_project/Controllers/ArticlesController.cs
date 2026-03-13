@@ -10,14 +10,19 @@ public class ArticlesController : Controller
 {
     private readonly IArticleRepository _articleRepository;
     private readonly ITagRepository _tagRepository;
+    private readonly ILogger<ArticlesController> _logger;
 
-    public ArticlesController(IArticleRepository articleRepository, ITagRepository tagRepository)
+    public ArticlesController(IArticleRepository articleRepository, ITagRepository tagRepository, ILogger<ArticlesController> logger)
     {
         _articleRepository = articleRepository;
         _tagRepository = tagRepository;
+        _logger = logger;
     }
 
-    // GET: Articles
+    /// <summary>
+    /// Отображает список всех статей
+    /// </summary>
+    /// <returns>Представление со списком всех статей</returns>
     public async Task<IActionResult> Index()
     {
         var articles = await _articleRepository.ShowArticlesAsync();
@@ -30,7 +35,11 @@ public class ArticlesController : Controller
         return View(model);
     }
 
-    // GET: Articles/Details/5
+    /// <summary>
+    /// Отображает подробные данные выбранной статьи
+    /// </summary>
+    /// <param name="id">Идентификатор статьи</param>
+    /// <returns>Представление с подробными данными выбранной статьи</returns>
     public async Task<IActionResult> Details(int id)
     {
         var article = await _articleRepository.GetArticleById(id);
@@ -65,7 +74,10 @@ public class ArticlesController : Controller
         return View(model);
     }
 
-    // GET: Articles/Create
+    /// <summary>
+    /// Отображает форму создания новой статьи
+    /// </summary>
+    /// <returns>Представление с формой создания новой статьи</returns>
     [Authorize]
     public async Task<IActionResult> Create()
     {
@@ -79,7 +91,11 @@ public class ArticlesController : Controller
         return View(model);
     }
 
-    // POST: Articles/Create
+    /// <summary>
+    /// Сохраняет созданную статью
+    /// </summary>
+    /// <param name="model">Модель с данными статьи</param>
+    /// <returns>Перенаправляет на страницу со списком всех статей</returns>
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
@@ -110,10 +126,19 @@ public class ArticlesController : Controller
 
         await _articleRepository.CreateArticleAsync(article);
 
+        _logger.LogInformation(
+            "User {UserId} created article {ArticleId}",
+            userId,
+            article.Id);
+
         return RedirectToAction(nameof(Index));
     }
 
-    // GET: Articles/Edit/5
+    /// <summary>
+    /// Отображает форму редактирования выбранной статьи
+    /// </summary>
+    /// <param name="id">Идентификатор статьи</param>
+    /// <returns>Представление с формой редактирования выбранной статьи</returns>
     [Authorize]
     public async Task<IActionResult> Edit(int id)
     {
@@ -135,7 +160,11 @@ public class ArticlesController : Controller
         return View(model);
     }
 
-    // POST: Articles/Edit/5
+    /// <summary>
+    /// Сохраняет изменения отредактированной статьи
+    /// </summary>
+    /// <param name="model">Модель с измененными данными статьи</param>
+    /// <returns>Перенаправляет на страницу со списком всех статей</returns>
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
@@ -163,10 +192,19 @@ public class ArticlesController : Controller
 
         await _articleRepository.SaveAsync();
 
+        _logger.LogInformation(
+            "User {UserId} edited article {ArticleId}",
+            GetCurrentUserId(),
+            article.Id);
+
         return RedirectToAction(nameof(Index));
     }
 
-    // POST: Articles/Delete/5
+    /// <summary>
+    /// Удаляет выбранную статью
+    /// </summary>
+    /// <param name="id">Идентификатор статьи</param>
+    /// <returns>Перенаправляет на страницу со списком всех статей</returns>
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -188,9 +226,19 @@ public class ArticlesController : Controller
         
         await _articleRepository.DeleteAsync(article);
 
+        _logger.LogInformation(
+            "User {UserId} deleted article {ArticleId}",
+            currentUserId,
+            article.Id);
+
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Получить текущего пользователя
+    /// </summary>
+    /// <returns>Идентификатор текущего пользователя</returns>
+    /// <exception cref="Exception"></exception>
     private int GetCurrentUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier);

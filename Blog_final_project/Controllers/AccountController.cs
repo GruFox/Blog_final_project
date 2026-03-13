@@ -11,13 +11,18 @@ namespace Blog_final_project.Controllers;
 public class AccountController : Controller
 {
     private readonly BlogDbContext _context;
+    private readonly ILogger<AccountController> _logger;
 
-    public AccountController(BlogDbContext context)
+    public AccountController(BlogDbContext context, ILogger<AccountController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
-    // GET
+    /// <summary>
+    /// Отображает форму для входа
+    /// </summary>
+    /// <returns>Представление с формой для входа</returns>
     [HttpGet]
     public IActionResult Login()
     {
@@ -31,7 +36,11 @@ public class AccountController : Controller
         return View(model);
     }
 
-    // POST
+    /// <summary>
+    /// Авторизует пользователя
+    /// </summary>
+    /// <param name="model">Модель с параметрами для входа</param>
+    /// <returns>Перенаправляет на главную страницу приложения</returns>
     [HttpPost]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
@@ -71,10 +80,17 @@ public class AccountController : Controller
 
         await HttpContext.SignInAsync("MyCookieAuth", new ClaimsPrincipal(claimsIdentity));
 
+        _logger.LogInformation(
+            "User {UserName} logged in",
+            user.UserName);
+
         return RedirectToAction("Index", "Home");
     }
 
-    // GET
+    /// <summary>
+    /// Отображает форму регистрации пользователя
+    /// </summary>
+    /// <returns>Представление с формой регистрации пользователя</returns>
     public IActionResult Register()
     {
         var model = new RegisterViewModel();
@@ -82,7 +98,11 @@ public class AccountController : Controller
         return View(model);
     }
 
-    // POST
+    /// <summary>
+    /// Сохраняет регистрационные данные
+    /// </summary>
+    /// <param name="model">Модель с регистрационными данными</param>
+    /// <returns>Перенаправляет на страницу с формой для входа</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterViewModel model)
@@ -126,9 +146,20 @@ public class AccountController : Controller
             await _context.SaveChangesAsync();
         }
 
+        _logger.LogInformation(
+            "New user {UserId} registered",
+            newUser.Id);
+
         return RedirectToAction("Login");
     }
 
+    /// <summary>
+    /// Отображает форму создания нового пользователя
+    /// </summary>
+    /// <returns>Представление с формой создания нового пользователя</returns>
+    /// <remarks>
+    /// Доступ к методу имеет только пользователь с ролью Admin
+    /// </remarks>
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateUser()
     {
@@ -142,6 +173,14 @@ public class AccountController : Controller
         return View(model);
     }
 
+    /// <summary>
+    /// Сохраняет созданного пользователя
+    /// </summary>
+    /// <param name="model">Модель с данными нового пользователя</param>
+    /// <returns>Перенаправление на страницу со списком всех пользователей</returns>
+    /// <remarks>
+    /// Доступ к методу имеет только пользователь с ролью Admin
+    /// </remarks>
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
@@ -176,9 +215,17 @@ public class AccountController : Controller
             await _context.SaveChangesAsync();
         }
 
+        _logger.LogInformation(
+            "New user {UserId} created by Admin",
+            newUser.Id);
+
         return RedirectToAction("Index", "Users");
     }
 
+    /// <summary>
+    /// Завершает авторизацию пользователя
+    /// </summary>
+    /// <returns>Перенаправление на главную страницу сайта</returns>
     [HttpPost]
     [Route("Logout")]
     [ValidateAntiForgeryToken]
@@ -186,11 +233,11 @@ public class AccountController : Controller
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync("MyCookieAuth");
-        return RedirectToAction("Index", "Home");
-    }
 
-    public IActionResult AccessDenied()
-    {
-        return View();
+        _logger.LogInformation(
+            "User {UserName} logged out",
+            User.Identity?.Name);
+
+        return RedirectToAction("Index", "Home");
     }
 }

@@ -14,6 +14,10 @@ namespace Blog_final_project.Controllers
             _articleRepository = articleRepository;
         }
 
+        /// <summary>
+        /// Отображает список всех статей
+        /// </summary>
+        /// <returns>Представление со списком всех статей</returns>
         public async Task<IActionResult> Index()
         {
             var articles = await _articleRepository.ShowArticlesAsync();

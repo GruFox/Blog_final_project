@@ -14,7 +14,7 @@ public class RoleRepository : IRoleRepository
         _context = context;
     }
 
-    public async Task<List<Role>> ShowRolesAsync()
+    public async Task<List<Role>> GetAllRolesAsync()
     {
         return await _context.Roles.ToListAsync();
     }
@@ -40,11 +40,6 @@ public class RoleRepository : IRoleRepository
         return await _context.Roles
             .Include(r => r.UserRoles)
             .FirstOrDefaultAsync(r => r.Id == id);
-    }
-
-    public async Task<List<Role>> GetAllRolesAsync()
-    {
-        return await _context.Roles.ToListAsync();
     }
 
     public async Task SaveAsync()

@@ -5,6 +5,7 @@ namespace Blog_final_project.Models;
 public class LoginViewModel
 {
     [Required(ErrorMessage = "Введите логин")]
+    [StringLength(100, ErrorMessage = "логин слишком длинный")]
     [Display(Name = "Логин")]
     public string Login { get; set; } = null!;
 

@@ -8,17 +8,23 @@ namespace Blog_final_project.Controllers;
 [Authorize]
 public class RolesController : Controller
 {
-    private IRoleRepository _roleRepository;
+    private readonly IRoleRepository _roleRepository;
+    private readonly ILogger<RolesController> _logger;
 
-    public RolesController(IRoleRepository roleRepository)
+
+    public RolesController(IRoleRepository roleRepository, ILogger<RolesController> logger)
     {
         _roleRepository = roleRepository;
+        _logger = logger;
     }
 
-    // GET: Roles
+    /// <summary>
+    /// Отображает список всех ролей
+    /// </summary>
+    /// <returns>Представление со списком всех ролей</returns>
     public async Task<IActionResult> Index()
     {
-        var roles = await _roleRepository.ShowRolesAsync();
+        var roles = await _roleRepository.GetAllRolesAsync();
         
         var model = new RoleViewModel()
         {
@@ -28,7 +34,11 @@ public class RolesController : Controller
         return View(model);
     }
 
-    // GET: Roles/Details/5
+    /// <summary>
+    /// Отображает подробные данные выбранной роли
+    /// </summary>
+    /// <param name="id">Идентификатор роли</param>
+    /// <returns>Представление с подробными данными выбранной роли</returns>
     public async Task<IActionResult> Details(int id)
     {
         var role = await _roleRepository.GetRoleById(id);
@@ -46,7 +56,13 @@ public class RolesController : Controller
         return View(model);
     }
 
-    // GET: Roles/Create
+    /// <summary>
+    /// Отображает форму создания новой роли
+    /// </summary>
+    /// <returns>Представление с формой создания новой роли</returns>
+    /// <remarks>
+    /// Доступ к методу имеет только пользователь с ролью Admin
+    /// </remarks>
     [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
@@ -55,7 +71,11 @@ public class RolesController : Controller
         return View(model);
     }
 
-    // POST: Roles/Create
+    /// <summary>
+    /// Сохраняет созданную роль
+    /// </summary>
+    /// <param name="model">Модель с данными роли</param>
+    /// <returns>Перенаправляет на страницу со списком всех ролей</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateRoleViewModel model)
@@ -71,10 +91,21 @@ public class RolesController : Controller
 
         await _roleRepository.CreateRoleAsync(model.Name, model.Description);
 
+        _logger.LogInformation(
+            "Role {RoleName} created",
+            model.Name);
+
         return RedirectToAction(nameof(Index));
     }
 
-    // GET: Roles/Edit/5
+    /// <summary>
+    /// Отображает форму редактирования выбранной роли
+    /// </summary>
+    /// <param name="id">Идентификатор роли</param>
+    /// <returns>Представление с формой редактирования выбранной роли</returns>
+    /// <remarks>
+    /// Доступ к методу имеет только пользователь с ролью Admin
+    /// </remarks>
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id)
     {
@@ -92,7 +123,11 @@ public class RolesController : Controller
         return View(model);
     }
 
-    // POST: Roles/Edit/5
+    /// <summary>
+    /// Сохраняет измененную роль
+    /// </summary>
+    /// <param name="model">Модель с измененными данными роли</param>
+    /// <returns>Перенаправляет на страницу со списком всех ролей</returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditRoleViewModel model)
@@ -109,6 +144,10 @@ public class RolesController : Controller
         role.Description = model.Description;
 
         await _roleRepository.SaveAsync();
+
+        _logger.LogInformation(
+            "Role {RoleId} edited",
+            role.Id);
 
         return RedirectToAction(nameof(Index));
     }

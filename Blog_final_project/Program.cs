@@ -1,7 +1,10 @@
 using Blog_final_project.Data;
 using Blog_final_project.Interfaces;
+using Blog_final_project.Middlewares;
 using Blog_final_project.Repositoties;
 using Microsoft.EntityFrameworkCore;
+using NLog;
+using NLog.Web;
 
 namespace Blog_final_project;
 
@@ -10,6 +13,9 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        builder.Logging.ClearProviders();
+        builder.Host.UseNLog();
 
         // Add services to the container.
         builder.Services.AddControllersWithViews();
@@ -46,6 +52,9 @@ public class Program
         app.UseStaticFiles();
 
         app.UseRouting();
+
+        app.UseMiddleware<ExceptionLoggingMiddleware>();
+        app.UseMiddleware<RequestLoggingMiddleware>();
 
         app.UseAuthentication();
         app.UseAuthorization();

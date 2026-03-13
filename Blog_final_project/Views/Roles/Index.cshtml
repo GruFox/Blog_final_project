@@ -13,10 +13,9 @@
            asp-area=""
            asp-controller="Roles"
            asp-action="Create">
-            Добавить роль
+           Добавить роль
         </a>
     }
-    
 
     @if (Model.Roles.Any())
     {
@@ -45,7 +44,7 @@
                            asp-controller="Roles"
                            asp-action="Edit"
                            asp-route-id="@role.Id">
-                            Редактировать
+                           Редактировать
                         </a>
                     </div>
                 }
@@ -56,7 +55,7 @@
     else
     {
         <div>
-            <label> Поиск не дал результатов.</label>
+            <label>Поиск не дал результатов.</label>
         </div>
     }
 </div>

@@ -72,10 +72,7 @@
     </div>
 
     <!-- Отправка комментария -->
-    <form asp-controller="Comments"
-          asp-action="Create"
-          method="post"
-          class="chat-input">
+    <form asp-controller="Comments" asp-action="Create" method="post" class="chat-input">
 
         <input type="hidden" name="ArticleId" value="@Model.ArticleId" />
 
