@@ -15,7 +15,7 @@ public interface IArticleRepository
     /// </summary>
     /// <param name="id">Идентификатор статьи</param>
     /// <returns>Статью</returns>
-    Task<Article?> GetArticleById(int id);
+    Task<Article?> GetArticleByIdAsync(int id);
 
     /// <summary>
     /// Создает статью
@@ -35,7 +35,7 @@ public interface IArticleRepository
     /// </summary>
     /// <param name="article">Удаляемая статья</param>
     /// <returns></returns>
-    Task DeleteAsync(Article article);
+    Task DeleteArticleAsync(Article article);
 
     /// <summary>
     /// Проверяет на совпадение названий статьи

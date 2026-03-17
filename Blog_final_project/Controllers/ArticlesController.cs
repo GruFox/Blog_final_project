@@ -42,7 +42,7 @@ public class ArticlesController : Controller
     /// <returns>Представление с подробными данными выбранной статьи</returns>
     public async Task<IActionResult> Details(int id)
     {
-        var article = await _articleRepository.GetArticleById(id);
+        var article = await _articleRepository.GetArticleByIdAsync(id);
 
         if (article == null)
             return NotFound();
@@ -142,7 +142,7 @@ public class ArticlesController : Controller
     [Authorize]
     public async Task<IActionResult> Edit(int id)
     {
-        var article = await _articleRepository.GetArticleById(id);
+        var article = await _articleRepository.GetArticleByIdAsync(id);
 
         if (article == null) return NotFound();
 
@@ -176,7 +176,7 @@ public class ArticlesController : Controller
             return View(model);
         }
 
-        var article = await _articleRepository.GetArticleById(model.Id);
+        var article = await _articleRepository.GetArticleByIdAsync(model.Id);
         if (article == null) return NotFound();
 
         var selectedTags = new List<Tag>();
@@ -210,7 +210,7 @@ public class ArticlesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var article = await _articleRepository.GetArticleById(id);
+        var article = await _articleRepository.GetArticleByIdAsync(id);
 
         if (article == null)
         {
@@ -224,7 +224,7 @@ public class ArticlesController : Controller
             return Forbid();
         }
         
-        await _articleRepository.DeleteAsync(article);
+        await _articleRepository.DeleteArticleAsync(article);
 
         _logger.LogInformation(
             "User {UserId} deleted article {ArticleId}",

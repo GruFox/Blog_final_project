@@ -9,6 +9,7 @@ namespace Blog_final_project.Controllers
         /// Выводит причину запрета
         /// </summary>
         /// <returns>Представление с причиной запрета</returns>
+        [HttpGet]
         [Route("Error/AccessDenied")]
         public IActionResult AccessDenied()
         {
@@ -20,6 +21,7 @@ namespace Blog_final_project.Controllers
         /// Выводит причину неотображения страницы
         /// </summary>
         /// <returns>Представление с причиной неотображения страницы</returns>
+        [HttpGet]
         [Route("Error/NotFound")]
         public IActionResult NotFoundPage()
         {
@@ -31,6 +33,7 @@ namespace Blog_final_project.Controllers
         /// Выводит ошибку сервера
         /// </summary>
         /// <returns>Представление о внутренней ошибке сервера</returns>
+        [HttpGet]
         [Route("Error/ServerError")]
         public IActionResult ServerError()
         {

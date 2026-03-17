@@ -21,7 +21,7 @@ public class ArticleRepository : IArticleRepository
             .ToListAsync();
     }
 
-    public async Task<Article?> GetArticleById(int id)
+    public async Task<Article?> GetArticleByIdAsync(int id)
     {
         return await _context.Articles
             .Include(a => a.Tags)
@@ -42,7 +42,7 @@ public class ArticleRepository : IArticleRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(Article article)
+    public async Task DeleteArticleAsync(Article article)
     {
         _context.Articles.Remove(article);
         await _context.SaveChangesAsync();
